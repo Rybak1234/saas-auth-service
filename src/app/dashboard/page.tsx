@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface User {
   id: string;
@@ -212,6 +213,7 @@ export default function DashboardPage() {
     setShowDocForm(false);
     setEditDoc(null);
     setDocForm({ title: "", content: "", category: "General" });
+    toast.success(editDoc ? 'Documento actualizado' : 'Documento creado');
     fetchDocuments();
     fetchAudit();
   };
@@ -219,6 +221,7 @@ export default function DashboardPage() {
   const deleteDocument = async (id: string) => {
     if (!confirm("¿Eliminar este documento?")) return;
     await fetch(`/api/documents/${id}`, { method: "DELETE", headers: authHeaders() });
+    toast.success('Documento eliminado');
     fetchDocuments();
     fetchAudit();
   };
