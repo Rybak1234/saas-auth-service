@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SaaS Auth Service",
-  description: "Módulo de identidad y acceso multi-tenant",
+  title: "NovaTech Docs · Gestión de Documentos",
+  description: "Plataforma de notas y documentos para el equipo NovaTech — organiza, busca y colabora",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

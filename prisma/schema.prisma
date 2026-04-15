@@ -13,6 +13,7 @@ model Tenant {
   slug      String   @unique
   createdAt DateTime @default(now())
   users     User[]
+  documents Document[]
 }
 
 model User {
@@ -28,6 +29,7 @@ model User {
   updatedAt    DateTime     @updatedAt
   sessions     Session[]
   auditLogs    AuditLog[]
+  documents    Document[]
 }
 
 model Session {
@@ -48,4 +50,18 @@ model AuditLog {
   userAgent String?
   details   String?
   createdAt DateTime @default(now())
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @default("")
+  category  String   @default("General")
+  pinned    Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -42,7 +42,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-indigo-50">
       <div className="w-full max-w-md animate-fade-in">
-        <Link href="/" className="block text-center mb-2 text-indigo-600 font-bold text-xl">🔐 SaaS Auth</Link>
+        <Link href="/" className="block text-center mb-2 text-indigo-600 font-bold text-xl">� NovaTech Docs</Link>
         <h1 className="text-2xl font-bold text-center mb-6">Iniciar Sesión</h1>
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg border p-6 space-y-4">
           {error && <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{error}</p>}

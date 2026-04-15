@@ -44,6 +44,17 @@ interface SessionEntry {
   user: { email: string; name: string };
 }
 
+interface DocItem {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  pinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+  user: { name: string; email: string };
+}
+
 function getToken() {
   return typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 }
@@ -59,10 +70,16 @@ export default function DashboardPage() {
   const [logs, setLogs] = useState<AuditEntry[]>([]);
   const [tenant, setTenant] = useState<TenantInfo | null>(null);
   const [sessions, setSessions] = useState<SessionEntry[]>([]);
-  const [tab, setTab] = useState<"team" | "audit" | "settings" | "sessions">("team");
+  const [tab, setTab] = useState<"documents" | "team" | "audit" | "settings" | "sessions">("documents");
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [createForm, setCreateForm] = useState({ name: "", email: "", password: "", role: "member" });
   const [createError, setCreateError] = useState("");
+  const [documents, setDocuments] = useState<DocItem[]>([]);
+  const [docSearch, setDocSearch] = useState("");
+  const [docCategory, setDocCategory] = useState("");
+  const [editDoc, setEditDoc] = useState<DocItem | null>(null);
+  const [showDocForm, setShowDocForm] = useState(false);
+  const [docForm, setDocForm] = useState({ title: "", content: "", category: "General" });
 
   const fetchTeam = useCallback(async () => {
     const res = await fetch("/api/users", { headers: authHeaders() });
@@ -87,6 +104,14 @@ export default function DashboardPage() {
     if (res.ok) setSessions(await res.json());
   }, []);
 
+  const fetchDocuments = useCallback(async () => {
+    const params = new URLSearchParams();
+    if (docSearch) params.set("search", docSearch);
+    if (docCategory) params.set("category", docCategory);
+    const res = await fetch(`/api/documents?${params}`, { headers: authHeaders() });
+    if (res.ok) setDocuments(await res.json());
+  }, [docSearch, docCategory]);
+
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (!stored) {
@@ -99,7 +124,8 @@ export default function DashboardPage() {
     fetchAudit();
     fetchTenant(u.tenantId);
     fetchSessions();
-  }, [router, fetchTeam, fetchAudit, fetchTenant, fetchSessions]);
+    fetchDocuments();
+  }, [router, fetchTeam, fetchAudit, fetchTenant, fetchSessions, fetchDocuments]);
 
   const logout = async () => {
     const refreshToken = localStorage.getItem("refreshToken");
@@ -168,6 +194,54 @@ export default function DashboardPage() {
     fetchSessions();
   };
 
+  const saveDocument = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editDoc) {
+      await fetch(`/api/documents/${editDoc.id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(docForm),
+      });
+    } else {
+      await fetch("/api/documents", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify(docForm),
+      });
+    }
+    setShowDocForm(false);
+    setEditDoc(null);
+    setDocForm({ title: "", content: "", category: "General" });
+    fetchDocuments();
+    fetchAudit();
+  };
+
+  const deleteDocument = async (id: string) => {
+    if (!confirm("¿Eliminar este documento?")) return;
+    await fetch(`/api/documents/${id}`, { method: "DELETE", headers: authHeaders() });
+    fetchDocuments();
+    fetchAudit();
+  };
+
+  const togglePin = async (doc: DocItem) => {
+    await fetch(`/api/documents/${doc.id}`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ pinned: !doc.pinned }),
+    });
+    fetchDocuments();
+  };
+
+  const startEdit = (doc: DocItem) => {
+    setEditDoc(doc);
+    setDocForm({ title: doc.title, content: doc.content, category: doc.category });
+    setShowDocForm(true);
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [docSearch, docCategory, fetchDocuments]);
+
   const updateTenantName = async (name: string) => {
     if (!tenant) return;
     const res = await fetch(`/api/tenants/${tenant.id}`, {
@@ -198,12 +272,22 @@ export default function DashboardPage() {
   const isOwner = user.role === "owner";
   const isAdmin = user.role === "admin" || isOwner;
 
+  const categoryColor: Record<string, string> = {
+    General: "bg-slate-100 text-slate-700",
+    Importante: "bg-red-100 text-red-700",
+    Proyecto: "bg-blue-100 text-blue-700",
+    Personal: "bg-purple-100 text-purple-700",
+    Referencia: "bg-amber-100 text-amber-700",
+    Idea: "bg-emerald-100 text-emerald-700",
+  };
+  const categories = Object.keys(categoryColor);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b shadow-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-bold text-indigo-600">🔐 SaaS Auth</h1>
+            <h1 className="text-lg font-bold text-indigo-600">� NovaTech Docs</h1>
             {tenant && (
               <span className="text-sm text-gray-400 hidden sm:inline">
                 {tenant.name}
@@ -238,17 +322,17 @@ export default function DashboardPage() {
               <p className="text-3xl font-bold text-gray-900">{tenant.stats.auditCount}</p>
             </div>
             <div className="bg-white rounded-xl border p-5">
-              <p className="text-sm text-gray-500">Organización</p>
-              <p className="text-xl font-bold text-indigo-700 truncate">{tenant.name}</p>
-              <p className="text-xs text-gray-400">{tenant.slug}</p>
+              <p className="text-sm text-gray-500">Documentos</p>
+              <p className="text-3xl font-bold text-indigo-700">{documents.length}</p>
+              <p className="text-xs text-gray-400">{documents.filter(d => d.pinned).length} fijados</p>
             </div>
           </div>
         )}
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
-          {(["team", "audit", "sessions", "settings"] as const).map((t) => {
-            const labels = { team: "👥 Equipo", audit: "📋 Auditoría", sessions: "🔑 Sesiones", settings: "⚙️ Configuración" };
+          {(["documents", "team", "audit", "sessions", "settings"] as const).map((t) => {
+            const labels = { documents: "📄 Documentos", team: "👥 Equipo", audit: "📋 Auditoría", sessions: "🔑 Sesiones", settings: "⚙️ Configuración" };
             if (t === "settings" && !isOwner) return null;
             if ((t === "sessions") && !isAdmin) return null;
             return (
@@ -262,6 +346,119 @@ export default function DashboardPage() {
             );
           })}
         </div>
+
+        {/* Documents Tab */}
+        {tab === "documents" && (
+          <div>
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+              <input
+                type="text"
+                placeholder="Buscar documentos..."
+                value={docSearch}
+                onChange={(e) => setDocSearch(e.target.value)}
+                className="flex-1 border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+              <select
+                value={docCategory}
+                onChange={(e) => setDocCategory(e.target.value)}
+                className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">Todas las categorías</option>
+                {categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  setEditDoc(null);
+                  setDocForm({ title: "", content: "", category: "General" });
+                  setShowDocForm(true);
+                }}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 transition whitespace-nowrap"
+              >
+                + Nuevo Documento
+              </button>
+            </div>
+
+            {showDocForm && (
+              <form onSubmit={saveDocument} className="bg-white rounded-xl border shadow-sm p-6 mb-6 space-y-4">
+                <h3 className="font-semibold text-lg">{editDoc ? "Editar Documento" : "Nuevo Documento"}</h3>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Título</label>
+                  <input
+                    value={docForm.title}
+                    onChange={(e) => setDocForm({ ...docForm, title: e.target.value })}
+                    required
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Título del documento"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Categoría</label>
+                  <select
+                    value={docForm.category}
+                    onChange={(e) => setDocForm({ ...docForm, category: e.target.value })}
+                    className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {categories.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Contenido</label>
+                  <textarea
+                    value={docForm.content}
+                    onChange={(e) => setDocForm({ ...docForm, content: e.target.value })}
+                    rows={8}
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-y"
+                    placeholder="Escribe tu nota o documento aquí..."
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button type="submit" className="bg-indigo-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-indigo-700 transition">
+                    {editDoc ? "Guardar Cambios" : "Crear Documento"}
+                  </button>
+                  <button type="button" onClick={() => { setShowDocForm(false); setEditDoc(null); }} className="px-6 py-2 rounded-lg text-sm border hover:bg-gray-50 transition">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {documents.length === 0 ? (
+              <div className="bg-white rounded-xl border p-12 text-center text-gray-400">
+                <p className="text-4xl mb-3">📄</p>
+                <p className="font-medium">No hay documentos aún</p>
+                <p className="text-sm mt-1">Crea tu primer documento o nota</p>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {documents.map((doc) => (
+                  <div key={doc.id} className={`bg-white rounded-xl border shadow-sm p-5 flex flex-col ${doc.pinned ? "ring-2 ring-indigo-200" : ""}`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold text-gray-900 line-clamp-1">{doc.pinned && "📌 "}{doc.title}</h3>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 ml-2 ${categoryColor[doc.category] || "bg-gray-100 text-gray-600"}`}>
+                        {doc.category}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 line-clamp-4 flex-1 whitespace-pre-wrap">{doc.content || "Sin contenido"}</p>
+                    <div className="mt-4 pt-3 border-t flex items-center justify-between text-xs text-gray-400">
+                      <span>{doc.user.name} · {new Date(doc.updatedAt).toLocaleDateString("es-BO")}</span>
+                      <div className="flex gap-2">
+                        <button onClick={() => togglePin(doc)} className="hover:text-indigo-600 transition" title={doc.pinned ? "Desfijar" : "Fijar"}>
+                          {doc.pinned ? "📌" : "📍"}
+                        </button>
+                        <button onClick={() => startEdit(doc)} className="hover:text-indigo-600 transition">✏️</button>
+                        <button onClick={() => deleteDocument(doc.id)} className="hover:text-red-600 transition">🗑️</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Team Tab */}
         {tab === "team" && (

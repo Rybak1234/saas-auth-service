@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 const features = [
-  { icon: "🏢", title: "Multi-Tenant", desc: "Organizaciones aisladas con su propio equipo y datos" },
-  { icon: "🔐", title: "JWT + Refresh", desc: "Tokens de acceso de 15 min con rotación automática de refresh" },
-  { icon: "👥", title: "RBAC", desc: "Roles Owner, Admin y Member con permisos granulares" },
-  { icon: "📋", title: "Auditoría", desc: "Registro completo de login, logout y cambios de permisos" },
-  { icon: "🛡️", title: "Bcrypt + HTTPS", desc: "Hashing seguro de contraseñas y conexiones cifradas" },
-  { icon: "⚡", title: "Edge-Ready", desc: "Construido sobre Next.js 14 con API Routes serverless" },
+  { icon: "📝", title: "Notas & Documentos", desc: "Crea, edita y organiza documentos del equipo en tiempo real" },
+  { icon: "🔍", title: "Búsqueda Rápida", desc: "Encuentra cualquier documento por título, contenido o categoría" },
+  { icon: "📁", title: "Categorías", desc: "Organiza tus notas por proyecto, área o prioridad" },
+  { icon: "👥", title: "Colaboración", desc: "Todo el equipo accede a los documentos de la organización" },
+  { icon: "📌", title: "Fijados", desc: "Marca documentos importantes para acceso rápido" },
+  { icon: "📋", title: "Auditoría", desc: "Registro completo de quién creó, editó o eliminó cada documento" },
 ];
 
 export default function HomePage() {
@@ -20,14 +20,14 @@ export default function HomePage() {
         <div className="relative max-w-5xl mx-auto px-4 py-24 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-1.5 rounded-full text-sm mb-6">
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            Production-ready auth module
+            NovaTech Document Manager
           </div>
           <h1 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight">
-            SaaS Auth Service
+            NovaTech Docs
           </h1>
           <p className="text-xl text-indigo-100 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Módulo de identidad y acceso multi-tenant con JWT, RBAC y auditoría de sesiones.
-            Listo para integrarse en cualquier plataforma SaaS.
+            Gestiona documentos, notas e información de tu equipo.
+            Organiza por categorías, busca al instante y colabora con tu organización.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link
@@ -51,7 +51,7 @@ export default function HomePage() {
 
       <div className="max-w-5xl mx-auto px-4 py-20">
         <h2 className="text-3xl font-bold text-center mb-4 text-slate-800">Características</h2>
-        <p className="text-center text-slate-500 mb-12">Seguridad empresarial, simplicidad de startup</p>
+        <p className="text-center text-slate-500 mb-12">Todo lo que necesita tu equipo para gestionar información</p>
         <div className="grid md:grid-cols-3 gap-6">
           {features.map((f) => (
             <div key={f.title} className="bg-white rounded-xl border p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
@@ -64,7 +64,7 @@ export default function HomePage() {
       </div>
 
       <footer className="border-t py-8 text-center text-sm text-slate-400">
-        SaaS Auth Service — Multi-tenant identity &amp; access management
+        NovaTech Docs — Gestión de documentos y notas para tu equipo
       </footer>
     </div>
   );
