@@ -48,11 +48,11 @@ export default function LoginPage() {
           {error && <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{error}</p>}
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>
-            <input name="email" type="email" required className="w-full border rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" />
+            <input name="email" type="email" required defaultValue="admin@demo.com" className="w-full border rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Contraseña</label>
-            <input name="password" type="password" required className="w-full border rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" />
+            <input name="password" type="password" required defaultValue="Demo1234!" className="w-full border rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" />
           </div>
           <button
             type="submit"

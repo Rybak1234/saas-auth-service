@@ -2,8 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { signAccessToken, signRefreshToken } from "@/lib/jwt";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") || "unknown";
+  const { allowed, resetIn } = checkRateLimit(`login:${ip}`, 5, 60000);
+  if (!allowed) {
+    const seconds = Math.ceil(resetIn / 1000);
+    return NextResponse.json(
+      { error: `Demasiados intentos. Intente de nuevo en ${seconds} segundos.` },
+      { status: 429 }
+    );
+  }
+
   const { email, password } = await req.json();
 
   if (!email || !password) {
@@ -49,5 +61,9 @@ export async function POST(req: NextRequest) {
     accessToken,
     refreshToken,
     user: { id: user.id, email: user.email, name: user.name, role: user.role, tenantId: user.tenantId },
+  }, {
+    headers: {
+      "Set-Cookie": `token=${accessToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`,
+    },
   });
 }

@@ -25,5 +25,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ message: "Logged out" });
+  const res = NextResponse.json({ message: "Logged out" });
+  res.cookies.set("token", "", { path: "/", maxAge: 0 });
+  return res;
 }
